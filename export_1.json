@@ -1,0 +1,166 @@
+{
+    "Data preventivo": "1722816000000",
+    "Nome veicolo": "BMW Serie 1 (F40) 5P (05/19>) 116d (85Kw) Ber 5p/d/1496cc",
+    "Targa": "GC152JX",
+    "Telaio": "Telaio WBA7M710007G77566",
+    "Data prima immatricolazione": "1600214400000",
+    "Totale ricambi": 943.38,
+    "Tabella": [
+        {
+            "Codice": "31306877057",
+            "Descrizione": "Ammortizzatore ant. Sx",
+            "Importo": 153.13,
+            "Ore di lavoro": 1.95
+        },
+        {
+            "Codice": "31306877058",
+            "Descrizione": "Ammortizzatore ant. Dx",
+            "Importo": 153.13,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "31316860787",
+            "Descrizione": "Cuffia parapolvere ammortizzatore ant. Dx",
+            "Importo": 9.27,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "31336892617",
+            "Descrizione": "Supporto sup. ammortizzatore ant. Dx",
+            "Importo": 105.8,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "31316860787",
+            "Descrizione": "Cuffia parapolvere ammortizzatore ant. Sx",
+            "Importo": 9.27,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "31336892617",
+            "Descrizione": "Supporto sup. ammortizzatore ant. Sx",
+            "Importo": 105.8,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "31336860753",
+            "Descrizione": "Tampone fine corsa ammortizzatore ant. Sx",
+            "Importo": 23.31,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "31336860753",
+            "Descrizione": "Tampone fine corsa ammortizzatore ant. Dx",
+            "Importo": 23.31,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": null,
+            "Descrizione": "CONVERGENZA ANTERIORE SUMMER",
+            "Importo": 2E+1,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "BM-LS-14876",
+            "Descrizione": "ASTA/PUNTONE, STABILIZZATORE [Originale: 31306862864 Asta",
+            "Importo": null,
+            "Ore di lavoro": 0.5
+        },
+        {
+            "Codice": "BM-LS-14876",
+            "Descrizione": "ASTA/PUNTONE, STABILIZZATORE [Originale: 31306862864 - Asta",
+            "Importo": null,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": null,
+            "Descrizione": "integrazione MDO",
+            "Importo": null,
+            "Ore di lavoro": 1.0
+        },
+        {
+            "Codice": null,
+            "Descrizione": "BOLLETTINO POST. CONC. GOV. (REVISIONE) ESENTE IVA",
+            "Importo": 10.2,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": null,
+            "Descrizione": "BOLLETTINO POSTALE REVISIONE esente iva",
+            "Importo": 1.76,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": null,
+            "Descrizione": "REVISIONE M.C.T.C.",
+            "Importo": 54.95,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": "Dettaglio voci",
+            "Descrizione": "PRESA/RICONSEGNA PER MANUTENZIONE",
+            "Importo": null,
+            "Ore di lavoro": 1.0
+        },
+        {
+            "Codice": null,
+            "Descrizione": "CONTROLLI PRE-REVISIONE",
+            "Importo": null,
+            "Ore di lavoro": 0.5
+        },
+        {
+            "Codice": null,
+            "Descrizione": "Controllo veicolo - Tempo manutenzionelkm=;mesi=",
+            "Importo": null,
+            "Ore di lavoro": 0.5
+        },
+        {
+            "Codice": null,
+            "Descrizione": "Filtro carburante - Tempo manutenzionelkm=0;mesi=0",
+            "Importo": null,
+            "Ore di lavoro": 0.45
+        },
+        {
+            "Codice": null,
+            "Descrizione": "Filtro cabina (microfiltro) Tempo manutenzione|km=;mesi=",
+            "Importo": null,
+            "Ore di lavoro": 0.2
+        },
+        {
+            "Codice": null,
+            "Descrizione": "Operazioni d'officina standard - Tempo manutenzionelkm=;mesi=",
+            "Importo": null,
+            "Ore di lavoro": 0.4
+        },
+        {
+            "Codice": null,
+            "Descrizione": "Olio motore - Tempo manutenzionelkm=;mesi= Batterie telecomando chiusura centralizzata/allarme - BMW",
+            "Importo": null,
+            "Ore di lavoro": 0.25
+        },
+        {
+            "Codice": "F026407277",
+            "Descrizione": "FILTRO OLIO [Originale: 11428593186 - Filtro olio motore] - BOSCH",
+            "Importo": null,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": null,
+            "Descrizione": "[ENI] OLIO MOTORE SAE 5W-30 (oem:BMW LL12-FE)",
+            "Importo": 30.05,
+            "Ore di lavoro": null
+        },
+        {
+            "Codice": null,
+            "Descrizione": "Tagliando",
+            "Importo": null,
+            "Ore di lavoro": 0.8
+        },
+        {
+            "Codice": null,
+            "Descrizione": "AZZERAMENTO SPIA SERVICE",
+            "Importo": null,
+            "Ore di lavoro": 0.3
+        }
+    ]
+}

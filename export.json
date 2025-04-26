@@ -1,0 +1,84 @@
+[
+    {
+        "F_RAGSOC": "SCALA SRL",
+        "F_TOTPRE": 191.92,
+        "Costo Tot. Ricambi": 103.07,
+        "Data preventivo": "1696291200000",
+        "Costo Tot. Varie": 0,
+        "Totale Imponibile": 157.31,
+        "Piva Riparatore": "08018221211",
+        "Numero ore lavorate": "2.0",
+        "Totale Iva": 34.61,
+        "F_TIPPRE": "Mecc",
+        "Tariffa Manodopera": "26.5",
+        "Costo Tot. MDO": 53,
+        "Descrizione Veicolo": "FIAT DOBLO' COMBI (4V) (01/15>) 1.3 MJT (70Kw) PC Cmb 5p/d/1248cc",
+        "Targa Veicolo": "Targa Veicolo FR165AE",
+        "Telaio": "Telaio ZFA26300006J47941",
+        "Km": 69191.0,
+        "Data Immatricolazione": "1527552000000",
+        "Cod.Motore": "330A1000"
+    },
+    {
+        "F_RAGSOC": "SCALA SRL",
+        "F_TOTPRE": 113.77,
+        "Costo Tot. Ricambi": 0,
+        "Data preventivo": "1696291200000",
+        "Costo Tot. Varie": 54.95,
+        "Totale Imponibile": 83.45,
+        "Piva Riparatore": "08018221211",
+        "Numero ore lavorate": "1.0",
+        "Totale Iva": 18.36,
+        "F_TIPPRE": "Mecc",
+        "Tariffa Manodopera": "1.0",
+        "Costo Tot. MDO": 28.5,
+        "Materiale": null,
+        "Smalt. rif.": 0.0,
+        "ES. Iva": 11.96,
+        "Data Stampa": null,
+        "Descrizione Veicolo": "SMART FORTWO (C453) (07/14>01/20<) 70 Ber 3p/b/999cc",
+        "Targa Veicolo": "Targa Veicolo FM286DD",
+        "Telaio": "Telaio WME4533421K242772",
+        "Km": 24550.0,
+        "Data Immatricolazione": "1508112000000",
+        "Cod.Motore": "H4D",
+        "Tabella Interventi Meccanica": [
+            {
+                "Quantita": 1.0,
+                "Codice": null,
+                "Descrizione": "BOLLETTINO POSTALE CONCESSIONE GOVERNATIVA",
+                "Ore": null,
+                "Prezzo unitario": 10.2,
+                "Sconto": null,
+                "Ammontare": 10.2
+            },
+            {
+                "Quantita": 1.0,
+                "Codice": null,
+                "Descrizione": "BOLLETTINO POSTALE REVISIONE esente iva",
+                "Ore": null,
+                "Prezzo unitario": 1.76,
+                "Sconto": null,
+                "Ammontare": 1.76
+            },
+            {
+                "Quantita": 1.0,
+                "Codice": null,
+                "Descrizione": "REVISIONE M.C.T.C.",
+                "Ore": null,
+                "Prezzo unitario": 54.95,
+                "Sconto": null,
+                "Ammontare": 54.95
+            },
+            {
+                "Quantita": 1.0,
+                "Codice": null,
+                "Descrizione": "PRESA/RICONSEGNA PER MANUTENZIONE",
+                "Ore": 1.0,
+                "Prezzo unitario": null,
+                "Sconto": null,
+                "Ammontare": null
+            }
+        ]
+    }
+]
