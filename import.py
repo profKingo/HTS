@@ -301,6 +301,5 @@ btnAvvia.grid(row=1, column=0, sticky="WE", padx=20, pady=30)
 label.grid(row=0, column=0,sticky="WE", padx=10, pady=20)
 c1.grid(row=0, column=1,sticky="WE", padx=10, pady=20)
 
-
 if __name__ == "__main__":
     window.mainloop()
