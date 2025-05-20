@@ -30,3 +30,9 @@ class riga:
     def __init__(self):
         pass
 
+nomedb="C:\\THS\\THS32Env\\wcArchivi.mdb"
+filejson="export.json"
+targetFolder=""
+mylog=""
+lockFilePath=""
+tipoPratica="M" #Meccanica #Carrozzieria

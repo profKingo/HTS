@@ -6,6 +6,8 @@ import pyodbc
 import os
 from datetime import datetime
 import struttura as s
+import configparser
+from tkinter import filedialog
     
 '''
 l'utente parte da file pdf da ocrizzare e quindi da inviare al portale di AIDA (tramite uno dei metodi tra cui WS)
@@ -14,12 +16,19 @@ pensare un batch che chiami appena generato il file la conversione e poi avvii l
 il JSON viene rimandato all'utente come???? Webhook - FTP - AIDA LINK
 '''
 conn=pyodbc.Connection
+'''
 nomedb="C:\\THS\\THS32Env\\wcArchivi.mdb"
 filejson="export.json"
+global targetFolder
+targetFolder=""
+mylog=""
+lockFilePath=""
 tipoPratica="M" #Meccanica #Carrozzieria
+'''
+
 #stringa di connessione al db
 def connetti():
-    connstr=f'Driver={{Microsoft Access Driver (*.mdb)}};Dbq=' + nomedb + ';Uid=;Pwd=;'
+    connstr=f'Driver={{Microsoft Access Driver (*.mdb)}};Dbq=' + s.nomedb + ';Uid=;Pwd=;'
     try:
         conn=pyodbc.connect(connstr)
     except:
@@ -30,25 +39,36 @@ def leggi_par_ini():
     if not os.path.exists(NOMEF):
         tk.messagebox.showerror("Errore: File dei parametri non esiste")
     else:
-        archivio=open(NOMEF, 'r')
-        riga=archivio.readline()
-        while(riga!=""):
-            nome = riga
-            riga=archivio.readline()
-        '''
-        s.pratica.F_CODCLI = Modulo2.ini_manager("r", "CLIENTE", "f_codli")
-        s.pratica.F_RAGSOC = Modulo2.ini_manager("r", "CLIENTE", "f_ragsoc")
-        s.pratica.F_VIACLI = Modulo2.ini_manager("r", "CLIENTE", "f_viacli")
-        s.pratica.F_CITTAC = Modulo2.ini_manager("r", "CLIENTE", "f_cittac")
-        s.pratica.F_CAPCLI = Modulo2.ini_manager("r", "CLIENTE", "f_capcli")
-        s.pratica.F_PROCLI = Modulo2.ini_manager("r", "CLIENTE", "f_procli")
-        s.pratica.F_PARIVA = Modulo2.ini_manager("r", "CLIENTE", "f_pariva")
-        s.pratica.F_TELEFO = Modulo2.ini_manager("r", "CLIENTE", "f_telefo")
-        '''
-        archivio.close()
+        config = configparser.ConfigParser()
+        config.read(NOMEF)
+        s.pratica.F_CODCLI = config["CLIENTE"]["f_codli"]
+        s.pratica.F_RAGSOC = config["CLIENTE"]["f_ragsoc"]
+        s.pratica.F_VIACLI = config["CLIENTE"]["f_viacli"]
+        s.pratica.F_CITTAC = config["CLIENTE"]["f_cittac"]
+        s.pratica.F_CAPCLI = config["CLIENTE"]["f_capcli"]
+        s.pratica.F_PROCLI = config["CLIENTE"]["f_procli"]
+        s.pratica.F_PARIVA = config["CLIENTE"]["f_pariva"]
+        s.pratica.F_TELEFO = config["CLIENTE"]["f_telefo"]
+
+        s.nomedb=config["PATH"]["MyPath"] + "\\" + config["PATH"]["DBName"]
+        s.targetFolder=config["PATH"]["targetFolder"]
+        s.mylog=config["PATH"]["mylog"]
+        s.lockFilePath=config["PATH"]["lockFilePath"]
 
 def leggijson():
-    data = json.load(open(filejson))
+    leggi_par_ini()
+    connetti()
+    print(s.targetFolder)
+    filetypes = (
+        ('JSON files', '*.json'),
+        ('All files', '*.*')
+    )
+    file1 = filedialog.askopenfilename(title='Apri un file',
+        initialdir="c:/hts/",
+        filetypes=filetypes)
+    if file1 is None:
+        file1=s.filejson
+    data = json.load(open(file1))
     if len(data)>=1:
         s.pratica.desc="Pratica"
         for pre in data:
