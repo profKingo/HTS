@@ -15,6 +15,7 @@ class pratica:
     F_PROCLI = ""
     F_PARIVA = ""
     F_TELEFO = ""
+    NumPratica = 0
     def __init__(self):
         pass
     def addprev(self, prev):
@@ -29,10 +30,11 @@ class prev:
 class riga:
     def __init__(self):
         pass
-
+'''
 nomedb="C:\\THS\\THS32Env\\wcArchivi.mdb"
 filejson="export.json"
 targetFolder=""
 mylog=""
 lockFilePath=""
 tipoPratica="M" #Meccanica #Carrozzieria
+'''
