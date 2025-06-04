@@ -89,7 +89,7 @@ def leggijson(pfile):
             initialdir="c:/hts/",
             filetypes=filetypes)
     else:   
-        file1=pfile
+        file1=s.targetFolder + pfile
     data = json.load(open(file1))
     ScriviLog( "import.py - lettura file json")
     if len(data)>=1:
@@ -97,16 +97,26 @@ def leggijson(pfile):
         for pre in data:
             for x in s.s_header:    #INTESTAZIONE PREVENTIVO
                 #qui dovrei leggere l'intestazione se si tratta di ALD o meno
-                a=pre[x]
-                if isinstance(a, str):
-                    com="s.prev.%s = '%s'" % (x.replace(" ", "_").replace(".",""), pre[x].replace("'",""))
-                else:
-                    com="s.prev.%s = '%s'" % (x.replace(" ", "_").replace(".",""), pre[x])
-                exec(com)
+                com=""
+                try:
+                    if type(data) is dict:
+                        val=data[x]
+                    else:
+                        val=pre[x]
+                    if isinstance(val, str):
+                        com="s.prev.%s = '%s'" % (x.replace(" ", "_").replace(".",""), val.replace("'",""))
+                    else:
+                        com="s.prev.%s = '%s'" % (x.replace(" ", "_").replace(".",""), val)
+                    exec(com)
+                except:
+                    print(file1, ":", x, "--->", com)
                 #leggo le righe nel file e creo dei campi in una struttura che memorizzi i dati del preventivo
             #RIGHE PREVENTIVO
             try:
-                tab=pre["Tabella Interventi Meccanica"]
+                if type(data) is dict:
+                    tab=data["Tabella Interventi Meccanica"]
+                else:
+                    tab=pre["Tabella Interventi Meccanica"]   
             except:
                 tab=[]
             righe=[]
@@ -114,7 +124,12 @@ def leggijson(pfile):
             for e in tab:
                 el=s.riga()
                 for x in s.s_elem:
-                    val=pre["Tabella Interventi Meccanica"][i][x]
+                    if type(data) is dict:
+                        listaint=data["Tabella Interventi Meccanica"]
+                        interv=listaint[i]
+                        val=interv[x] 
+                    else:
+                        val=pre["Tabella Interventi Meccanica"][i][x] 
                     if isinstance(val, str):
                         com='el.%s = "%s"' % (x.replace(" ", "_").replace(".",""), val.replace("'",""))
                     else:
@@ -124,6 +139,8 @@ def leggijson(pfile):
                 s.prev.addriga(s.prev, el)
                 righe.append(el)
             s.pratica.addprev(s.pratica, s.prev)
+            if type(data) is dict:
+                break
         #in righe ho tutte le righe del preventivo (s.elem) e s.prev la testata/piede
 
 def StartClock():
@@ -131,10 +148,8 @@ def StartClock():
 def StopClock():
     pass
 
-def Import_Dati():
-    ####GC########## disabilitaTutto()
-    
-    if datetime.datetime.now() > datetime.datetime(datetime.datetime.today().year, 12, 31): #
+def Import_JSON():
+    if datetime.datetime.now() > datetime.datetime(2025, 12, 31): #
         tk.messagebox.showerror("Error", "Contattare HTS GROUP per l'assistenza.")
         exit
     
@@ -196,16 +211,6 @@ def Import_Dati():
     else:
         tk.messagebox.showerror("Non ci sono file da elaborare nella cartella " + s.targetFolder, "Mancano files")
         ScriviLog("Non ci sono file da elaborare nella cartella " + s.targetFolder)
-
-    res=mb.askquestion('Importazione su DB', 'Vuoi importare sul DB?')
-    if res == 'no':
-        tk.messagebox.showinfo("Nessun dato importato","Processo completato senza importazione")
-    else:
-        importaSuDB()
-
-def importaSuDB():
-    #continua:
-    ####GC#### ClearCellsFromB12ToLastRow
     '''ciclo per tutti i file excel presenti nella cartella '''
     filesno = 0
     for file in files_file:
@@ -221,15 +226,58 @@ def importaSuDB():
             else:
                 tipoPratica = "C"
 
-            #### Se gli passo il numero di pratica lo avrei inserito in s.pratica.... AL MOMENTO NON IN USO!!!
-            try:
-                if s.pratica.NumPratica!=None:
-                    numPratica=0
-                else:
-                    numPratica=s.pratica.NumPratica
-            except:
+    #fine ciclo file json 
+    ScriviLog("File correttamente importati: " + str(filesno))
+    tk.messagebox.showinfo("Processo completato.", "Processo completato")
+    StopClock()    
+    if var1==1:
+        #Se non faccio nuove pratiche per forza (checkbox Nuove Pratiche SI) mi devo chiedere 
+        #per ogni targa (di ogni preventivo) se devo cercare le pratiche/preventivi vecchi da associare
+        for i in range(len(s.pratica.listaprev)):
+            prevtmp=s.pratica.listaprev[i]
+            listaoldprev=vediprev(prevtmp.Targa_Veicolo)    
+            if len(listaoldprev)>0:
+                #gestire la selezione della pratica/preventivo da collegare al preventivo attuale
+                pass
+            else:
+                res = tk.messagebox.askquestion("Nessun preventivo con questa targa. Inserisco nuova pratica","Ricerca completata")
+                if res=="yes":
+                    Import_Dati()
+
+
+def Import_Dati():
+    res=mb.askquestion('Importazione su DB', 'Vuoi importare sul DB?')
+    if res == 'no':
+        tk.messagebox.showinfo("Nessun dato importato","Processo completato senza importazione")
+    else:
+        importaSuDB()
+
+def importaSuDB():
+    #continua:
+    ####GC#### ClearCellsFromB12ToLastRow
+    files = os.listdir(s.targetFolder)
+    filesno = 0
+    global files_file
+    files_file = [f for f in files if os.path.isfile(os.path.join(s.targetFolder, f))]
+    for file in files_file:
+        if file.endswith(".json"):
+            filesno = filesno + 1
+
+        prev1 = s.pratica.listaprev[0] 
+        if prev1.F_TIPPRE == "Mecc":
+            tipoPratica = "M"
+        else:
+            tipoPratica = "C"
+        #### Se gli passo il numero di pratica lo avrei inserito in s.pratica.... AL MOMENTO NON IN USO!!!
+        try:
+            if s.pratica.NumPratica!=None:
                 numPratica=0
-            elaboraPratica(numPratica, Y, file, tipoPratica)
+            else:
+                numPratica=s.pratica.NumPratica
+        except:
+            numPratica=0
+
+        elaboraPratica(numPratica, Y, file, tipoPratica)
         if var2==1:
             #cancello file json elaborato
             os.remove(file)             
@@ -287,11 +335,7 @@ def importaSuDB():
         '
         End If
     Next'''
-    #fine ciclo file json 
-    ScriviLog("File correttamente importati: " + str(filesno))
-    
-    tk.messagebox.showinfo("Processo completato.", "Processo completato")
-    StopClock()
+
 
 ###################################################################################
 def cercaNumPre(idPratica, idPreventivo):
@@ -320,7 +364,7 @@ def elaboraPratica(idPratica, Y, lFileName, tipoPratica):
         if len(rows) > 0:
             ScriviLog("pratica trovata")
             #controllo quanti NUM PREVENTIVI ci sono per questa pratica
-            idPratica = idPratica
+            #idPratica = idPratica
             cercaNumPre(idPratica, idPreventivo)
             #se 1 preventivo vuoto, allora CREO NUOVO PREVENTIVO
             #se più di 1, faccio selezionare il preventivo da SOVRASCRIVERE oppure CREO NUOVO PREVENTIVO
@@ -384,11 +428,10 @@ def vediprev(targa):
         tv.insert('', 'end', values=(row.ID_CODPRE, row.F_DATAPR, row.F_RAGSOC, f"€ {int(row.F_TOTRIC):.2f}"))
     return rows
 
-def nuovaPratica(idpra, filename):
-    # Ottieni la data corrente
-    dataAttuale = datetime.datetime.now()
+def nuovaPratica(idpratica, filename):
+    dataAttuale = datetime.datetime.now() # Ottieni la data corrente
     # Converti la data nel formato yyyymmdd
-    dataFormattata = (dataAttuale.__format__("yyyymmdd"))
+    dataFormattata = dataAttuale.strftime("%Y%m%d") #### (dataAttuale.__format__("yyyymmdd"))
     
     #trovo ultimo numero pratica e imposto il numero di pratica per nuovo record
     ScriviLog( "import.py - inserimento nuova pratica - insert carvei")
@@ -418,18 +461,21 @@ def nuovaPratica(idpra, filename):
     
     # inizio INSERT record in CARVEI
     StringaTraParentesi=""
-    
     if s.tipoPratica=="C":
         campi_carvei = """(f_numpra, f_targav, f_dataca, f_desmod, f_telaio, f_kimvei, f_datimm, 
             F_CODCLI, F_RAGSOC, F_VIACLI, F_CITTAC, F_CAPCLI, F_PROCLI, F_PARIVA, F_TELEFO, 
             f_tipove, f_tpreve, f_idmess, f_datcre, F___GUID, F_DESCOL)"""
+        prev0 = s.pratica.listaprev[0]
         f_numpra = idPratica
-        f_targav = prev0.Targa_Veicolo          #arrDati(2, 8)                
-        f_dataca = prev0.Data_preventivo        #DateValue(arrDati(2, 2))
-        f_desmod = prev0.Descrizione_Veicolo    #Left(arrDati(2, 4), 70)
-        f_telaio = prev0.Telaio                 #arrDati(2, 5)
-        f_kimvei = prev0.Km                     #arrDati(2, 6)
-        f_datimm = prev0.Data_Immatricolazione  #arrDati(2, 7)
+        f_targav = prev0.Targa_Veicolo          #                       arrDati(2, 8)                
+        datatemp = datetime.datetime.fromtimestamp(int(prev0.Data_preventivo)/1000)
+        f_dataca = datatemp.strftime("%d/%m/%Y")    #####datetime.datetime.fromtimestamp(datapr/1000)
+        datatemp = datetime.datetime.fromtimestamp(int(prev0.Data_Immatricolazione)/1000)
+        f_datcre = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")   #data e ora creazione pratica interna
+        f_datimm = datatemp.strftime("%d/%m/%Y %H:%M:%S")
+        f_desmod = prev0.Descrizione_Veicolo    #                       Left(arrDati(2, 4), 70)
+        f_telaio = prev0.Telaio.replace("Telaio ","")
+        f_kimvei = prev0.Km                     #                       arrDati(2, 6)
          #f_tipove  per il tipo vernice controllo le iniziali della descrizione
         if prev0.Tipo_smalto[0,3] == "OPA":
             f_tipove = "O"
@@ -449,7 +495,6 @@ def nuovaPratica(idpra, filename):
         leggi_par_ini()
         f_tpreve = "C"   #tipo logo C per carrozzeria
         f_idmess = dataFormattata + idPratica   #id mess
-        f_datcre = datetime.now()   #data e ora creazione pratica interna
         F___GUID = prev0.Id_riparazione[0,36]
         # codice colore vernice
         if prev0.Colore != "":
@@ -460,43 +505,50 @@ def nuovaPratica(idpra, filename):
                 F_DESCOL = codcol[0, fine] #tronco stringa a 20caratteri    DESCRIZIONE COLORE
             else:
                 F_DESCOL = codcol
-        valori_carvei = "('" + f_numpra + "','" + f_targav + "','" + f_dataca + "','" + f_desmod + "','" + f_telaio + "','" + f_kimvei + "','" + f_datimm + "', " 
-        valori_carvei = valori_carvei + "'" + s.pratica.F_CODCLI + "','" + s.pratica.F_RAGSOC + "','" + s.pratica.F_VIACLI + "','" + s.pratica.F_CITTAC + "','"
-        valori_carvei = valori_carvei + s.pratica.F_CAPCLI + "','" + s.pratica.F_PROCLI + "','" + s.pratica.F_PARIVA + "','" + s.pratica.F_TELEFO + "', " 
-        valori_carvei = valori_carvei + "'" + f_tipove + "','" + f_tpreve + "','" + f_idmess + "','" + f_datcre + "','" + F___GUID + "', '" + F_DESCOL + "')"
+        valori_carvei = "(" + str(f_numpra) + ",'" + f_targav + "','" + f_dataca + "','" + f_desmod 
+        valori_carvei = valori_carvei + "','" + f_telaio + "','" + str(f_kimvei) + "','" + f_datimm + "', " 
+        valori_carvei = valori_carvei + s.pratica.F_CODCLI + ",'" + s.pratica.F_RAGSOC + "','" + s.pratica.F_VIACLI + "','"
+        valori_carvei = valori_carvei + s.pratica.F_CITTAC + "','" + s.pratica.F_CAPCLI + "','" + s.pratica.F_PROCLI + "','" + s.pratica.F_PARIVA
+        valori_carvei = valori_carvei +  + "','" + s.pratica.F_TELEFO + "', " + "'" + f_tipove + "','" + f_tpreve + "','" + f_idmess
+        valori_carvei = valori_carvei  + "','" + f_datcre + "','" + F___GUID + "', '" + F_DESCOL + "')"
         #fine case Carr 
-         
     elif s.tipoPratica == "M":
-        campi_carvei = """(f_numpra, f_targav, f_dataca, f_desmod, f_telaio, f_kimvei, f_datimm, 
-                    F_CODCLI, F_RAGSOC, F_VIACLI, F_CITTAC, F_CAPCLI, F_PROCLI, F_PARIVA, F_TELEFO, _
-                    f_nummot, f_tipove, f_tpreve, f_idmess, f_datcre, F___GUID)"""
+        campi_carvei = "(f_numpra, f_targav, f_dataca, f_desmod, f_telaio, f_kimvei, f_datimm, "
+        campi_carvei = campi_carvei + "F_CODCLI, F_RAGSOC, F_VIACLI, F_CITTAC, F_CAPCLI, F_PROCLI, F_PARIVA, F_TELEFO, "
+        campi_carvei = campi_carvei + "f_nummot, f_tipove, f_tpreve, f_idmess, f_datcre, F___GUID)"""
+         
         f_numpra = idPratica
         prev0 = s.pratica.listaprev[0]
         f_targav = prev0.Targa_Veicolo.replace("Targa Veicolo ","")
-        f_dataca = datetime.fromtimestamp(prev0.Data_preventivo/1000)
-        from datetime import datetime
-        f_desmod = prev0.Descrizione_Veicolo.replace("'", "''")[0, 70]
-        f_telaio = prev0.Telaio
+        datatemp = datetime.datetime.fromtimestamp(int(prev0.Data_preventivo)/1000)
+        f_dataca = datatemp.strftime("%d/%m/%Y")    #####datetime.datetime.fromtimestamp(datapr/1000)
+        datatemp = datetime.datetime.fromtimestamp(int(prev0.Data_Immatricolazione)/1000)
+        f_datcre = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")   #data e ora creazione pratica interna
+        f_datimm = datatemp.strftime("%d/%m/%Y %H:%M:%S")
+        f_desmod = prev0.Descrizione_Veicolo.replace("'", "''")
+        f_desmod = f_desmod[0:70]
+        f_telaio = prev0.Telaio.replace("Telaio ","")
         f_kimvei = prev0.Km
-        f_datimm = datetime.fromtimestamp(prev0.Data_Immatricolazione/1000)
         #modifica del 24/03/2025 per i clienti privati oltre ALD
         #per i dati del cliente sono impostati su parametri.ini
-        if prev0.Id_riparazione != "":    #se la colonna IdRip. contiene testo, è ALD
-            leggi_par_ini()
-        else:   #non faccio nulla perchè non devo valorizzare i dati del Ciente
-            pass
+        ####NON SERVE
+        # if prev0.Id_riparazione != "":    #se la colonna IdRip. contiene testo, è ALD
+        #    leggi_par_ini()
 
         f_nummot = prev0.Km  #arrDati(2, 6)
         f_tipove = "O"   #tipo vernice di default metto doppio strato
         f_tpreve = "M"   #tipo logo M per meccanica
-        f_idmess = dataFormattata + idPratica   #id mess
-        f_datcre = datetime.now()   #data e ora creazione pratica interna
+        f_idmess = dataFormattata + str(idPratica)   #id mess
         F___GUID = idPratica
     
-        valori_carvei = "('" + f_numpra + "','" + f_targav + "','" + f_dataca + "','" + f_desmod + "','" + f_telaio + "','" + f_kimvei + "','" + f_datimm + "', " 
+        valori_carvei = "(" + str(f_numpra) + ",'" + f_targav 
+        valori_carvei = valori_carvei + "','" + f_dataca + "','" + f_desmod
+        valori_carvei = valori_carvei + "','" + f_telaio + "','" + str(f_kimvei)
+        valori_carvei = valori_carvei + "','" + f_datimm + "', " 
         valori_carvei = valori_carvei + "'" + s.pratica.F_CODCLI + "','" + s.pratica.F_RAGSOC + "','" + s.pratica.F_VIACLI + "','" + s.pratica.F_CITTAC + "','"
         valori_carvei = valori_carvei + s.pratica.F_CAPCLI + "','" + s.pratica.F_PROCLI + "','" + s.pratica.F_PARIVA + "','" + s.pratica.F_TELEFO + "', " 
-        valori_carvei = valori_carvei + "'" + f_nummot + "','" + f_tipove + "','" + f_tpreve + "','" + f_idmess + "','" + f_datcre + "','" + F___GUID + "')"
+        valori_carvei = valori_carvei + "'" + f_nummot + "','" + f_tipove + "','" + f_tpreve
+        valori_carvei = valori_carvei + "','" + f_idmess + "','" + str(f_datcre) + "','" + str(F___GUID) + "')"
     #fine case M 
 
     strSQL = "insert into carvei " + campi_carvei + " values " + valori_carvei
@@ -509,10 +561,10 @@ def nuovaPratica(idpra, filename):
     #fine insert CARVEI
 
     #insert Pratica2
-    if s.tipopratica == "C":
-        strSQL = "INSERT INTO Pratica2 (f_numpra, f_tippra, F_CODCOL) values (" + idPratica + ", '1', '" + StringaTraParentesi + "')"
+    if s.tipoPratica == "C":
+        strSQL = "INSERT INTO Pratica2 (f_numpra, f_tippra, F_CODCOL) values (" + str(idPratica) + ", '1', '" + StringaTraParentesi + "')"
     elif s.tipoPratica == "M":
-        strSQL = "INSERT INTO Pratica2 (f_numpra, f_tippra) values (" + idPratica + ", '2')"
+        strSQL = "INSERT INTO Pratica2 (f_numpra, f_tippra) values (" + str(idPratica) + ", '2')"
 
     ScriviLog("import.py - insert pratica2")
     # Esegui la query
@@ -656,7 +708,8 @@ Font_tuple = ("Calibri", 18, "bold")
 Font_tab = ("Calibri", 14, "normal")
 
 #Pulsante per avvio procedura e per selezionare pratica esistente
-btnAvvia=tk.Button(text="Leggi files", command=Import_Dati  , font=Font_tuple, fg="yellow", bg="blue")
+btnAvvia=tk.Button(text="Leggi files", command=Import_JSON, font=Font_tuple, fg="yellow", bg="blue")
+btnImporta=tk.Button(text="Importa su WinCar", command=Import_Dati, font=Font_tuple, fg="yellow", bg="blue", state="disabled")
 btnScelta=tk.Button(text="Scegli", command=cerca, font=Font_tuple, fg="yellow", bg="blue") 
         #command definisce il metodo da chiamare alla pressione del tasto
 #inserisco una tabella 
@@ -681,6 +734,7 @@ c1.grid(row=1, column=1,sticky="W", padx=10, pady=0)
 label2.grid(row=2, column=0,sticky="WE", padx=10, pady=0)
 c2.grid(row=2, column=1,sticky="W", padx=10, pady=0)
 btnAvvia.grid(row=3, column=0, sticky="WE", padx=20, pady=30)
+btnImporta.grid(row=3, column=1, sticky="WE", padx=20, pady=30)
 files_file=[]
 
 if __name__ == "__main__":
