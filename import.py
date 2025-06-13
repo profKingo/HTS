@@ -138,6 +138,8 @@ def leggijson(pfile):
                 i+=1
                 s.prev.addriga(s.prev, el)
                 righe.append(el)
+            s.prev.Targa_Veicolo=(s.prev.Targa_Veicolo).replace("Targa Veicolo ","")
+            s.prev.Telaio=(s.prev.Telaio).replace("Telaio ","")
             s.pratica.addprev(s.pratica, s.prev)
             if type(data) is dict:
                 break
@@ -230,7 +232,7 @@ def Import_JSON():
     ScriviLog("File correttamente importati: " + str(filesno))
     tk.messagebox.showinfo("Processo completato.", "Processo completato")
     StopClock()    
-    if var1==1:
+    if var1.get()==1:
         #Se non faccio nuove pratiche per forza (checkbox Nuove Pratiche SI) mi devo chiedere 
         #per ogni targa (di ogni preventivo) se devo cercare le pratiche/preventivi vecchi da associare
         for i in range(len(s.pratica.listaprev)):
@@ -243,7 +245,7 @@ def Import_JSON():
                 res = tk.messagebox.askquestion("Nessun preventivo con questa targa. Inserisco nuova pratica","Ricerca completata")
                 if res=="yes":
                     Import_Dati()
-
+    print(s.pratica.NumPratica)
 
 def Import_Dati():
     res=mb.askquestion('Importazione su DB', 'Vuoi importare sul DB?')
@@ -336,14 +338,384 @@ def importaSuDB():
         End If
     Next'''
 
-
 ###################################################################################
 def cercaNumPre(idPratica, idPreventivo):
     pass
+
 def inserisciNuovoPreventivo_TesPre(idPratica, idPreventivo, tipoPratica):
-    pass
+    ScriviLog("Avvio - insert tespre - pratica n : " + str(idPratica))
+    if tipoPratica=="C":
+        # inizio parametrizzazione campi tabella TESPRE
+        ID_CODPRE_tespre = idPratica        
+        prevcurr=s.prev
+        for pr in s.pratica.listaprev:
+            if pr.numprev==idPreventivo:
+                prevcurr=pr
+        F_DATAPR = prevcurr.Data_Preventivo        #data excel mecc
+        if prevcurr.KM is not None:
+            F_KMVEI = 0
+        else:
+            F_KMVEI = prevcurr.KM
+        F_SUPPLE = 15                   
+        F_FINITU = 10                   
+        if prevcurr.Tempo_agg_vern == "":
+            F_COMPLE = 0
+        else:
+            F_COMPLE = prevcurr.Tempo_agg_vern      # TEMPO AGG VERNIC
+        #F_MATAUT = -1                                               ' calcolo automatico mat.cons.
+        # MATERIALI DI CONSUMO
+        
+        strmatcon = prevcurr.F_MATCON.split(" ")
+        F_MATCON = strmatcon[2]
+        if prevcurr.Mat_consumo_iva == "":
+            F_TOTMAT = 0
+        else:
+            F_TOTMAT = prevcurr.Mat_consumo_iva     #IVA MATERIALI DI CONSUMO
+        F_COSTOR = prevcurr.Manodopera_carr         #IMPORTO MANODOPERA ORARIA CARROZZERIA
+        F_COSTO2 = prevcurr.Manodopera_mecc         #IMPORTO MANODOPERA ORARIA MECCANICA
+        F_MANCAR = prevcurr.Manodopera_carr_iva     #importo iva su manodopera carr.
+        strF_MANMEC = prevcurr.Manodopera_mecc_imp
+        F_TOTSR = prevcurr.Sr
+        F_TOTLA = prevcurr.La
+        F_TOTVE = prevcurr.Ve
+        F_TOTME = prevcurr.Me
+        F_TOTRIC = prevcurr.Ric_imp
+        F_IVARIC = 22           #% IVA su pezzi
+        F_IVAMAN = 22           #% IVA su manodopera
+        F_IVAMAT = 22           #% IVA su materiali
+        F_IVAVAR = 22           #% IVA su varie
+        F_CIVRIC = 22
+        F_CIVMAN = 22
+        F_CIVMAT = 22
+        F_CIVVAR = 22
+        F_IIVARIC = prevcurr.Ric_imp                      #Imposta su pezzi
+        F_IIVACAR = prevcurr.Manodopera_carr_iva          #Imposta su manodopera carrozzeria
+        F_IIVAMEC = prevcurr.Manodopera_mecc_iva          #Imposta su manodopera meccanica
+        F_IIVAMAT = prevcurr.Mat_consumo_iva              #Imposta su materiali
+        F_IIVAVAR = prevcurr.Smalt_rif_iva                #Imposta su varie
+        F_TIVARIC = prevcurr.Ric_tot                      #Totale (IVA compresa) pezzi
+        F_TIVACAR = prevcurr.Manodopera_carr_tot          #Totale (IVA compresa) manodopera carrozzeria
+        F_TIVAMEC = prevcurr.Manodopera_mecc_tot          #Totale (IVA compresa) manodopera meccanica
+        F_TIVAMAT = prevcurr.Mat_consumo_tot              #Totale (IVA compresa) materiali
+        F_TIVAVAR = prevcurr.Smalt_rif_tot                #Totale (IVA compresa) varie
+        F_TOTPRE = prevcurr.Oss_totale_imp                #Totale preventivo IVA escl.
+        F_TOTIVA = prevcurr.Oss_totale_iva                #Totale imposta
+        F_TOTALE = prevcurr.Oss_totale_tot                #Totale preventivo IVA incl.
+        F_TFINIT = prevcurr.Suppl_finitura                #Tempo per la finitura
+        F_TSUPPL = prevcurr.Suppl_doppiostrato            #Tempo per il supplemento
+        F_TCOMPL = prevcurr.Tempo_agg_vern                #Tempo per il completamento
+        F_VEOPER = prevcurr.Tot_tempi_ve                  #Tempo VE operativo
+        F_TEMSUP = prevcurr.Tot_tempi_suppl               #Totale tempi supplementari
+        F_VALUTA_tespre = "Euro"           
+        F_NUMPRE_tespre = idPreventivo                    #Numero Preventivo
+        F_SMAMAX = 0                #IMPORTO MAX APPLICABILE SMALTIM. RIFIUTI    
+        #Verifica se il valore è vuoto o nullo
+        if prevcurr.Ric_imp is None or prevcurr.Ric_imp == "":
+            strF_RICNET = 0
+        else:
+            # Converti il valore in decimale
+            strF_RICNET = prevcurr.Ric_imp
+        #fine parametrizzazione campi TESPRE
+                
+        # utilizzo una stringa di appoggio per i campi per semplificare la scrittura della query
+            campi_tespre = """(ID_CODPRE  ,   F_DATAPR  ,   F_KMVEI  ,   F_SUPPLE  ,   F_FINITU  ,   F_COMPLE  , 
+                F_MATCON  ,   F_TOTMAT  ,   F_COSTOR  ,   F_COSTO2  ,   F_MANCAR  ,   F_MANMEC  ,  
+                F_TOTSR  ,   F_TOTLA  ,     F_TOTVE  ,   F_TOTME  , F_TOTRIC  ,   F_IIVARIC  ,   F_IIVACAR  , 
+                F_IIVAMEC  ,   F_IIVAMAT  ,   F_IIVAVAR  , F_TIVARIC  ,   F_TIVACAR  ,   F_TIVAMEC  ,   F_TIVAMAT  , 
+                F_TIVAVAR  ,   F_TOTPRE  ,   F_TOTIVA  ,   F_TOTALE  , F_TFINIT  ,   F_TSUPPL  ,   F_TCOMPL  , 
+                F_VEOPER  ,   F_TEMSUP  ,  F_VALUTA  ,   F_NUMPRE  ,   F_SMAMAX  , F_RICNET, 
+                F_IVARIC, F_IVAMAN, F_IVAMAT, F_IVAVAR, F_CIVRIC, F_CIVMAN, F_CIVMAT, F_CIVVAR )"""
+        
+            # utilizzo una stringa di appoggio per i valori da copiare per semplificare la scrittura della query
+            valori_tespre = "(" + ID_CODPRE_tespre + ", " + F_DATAPR + ", " + F_KMVEI + ",  " + F_SUPPLE + ", " + F_FINITU + ", " + F_COMPLE + ", " 
+            valori_tespre = valori_tespre + F_MATCON + ", " + F_TOTMAT + ", " + F_COSTOR + ", " + F_COSTO2 + ", " + F_MANCAR + ", " + strF_MANMEC + ", "
+            valori_tespre = valori_tespre + F_TOTSR + ", " + F_TOTLA + ", " + F_TOTVE + ", " + F_TOTME + ", " + F_TOTRIC + ", " + F_IIVARIC + ", " + F_IIVACAR + "," 
+            valori_tespre = valori_tespre + F_IIVAMEC + ", " + F_IIVAMAT + ", " + F_IIVAVAR + ", " + F_TIVARIC + ", " + F_TIVACAR + ", " + F_TIVAMEC + ", " + F_TIVAMAT + ", " 
+            valori_tespre = valori_tespre + F_TIVAVAR + ", " + F_TOTPRE + ", " + F_TOTIVA + ", " + F_TOTALE + ", " + F_TFINIT + ", " + F_TSUPPL + ", " + F_TCOMPL + ", " 
+            valori_tespre = valori_tespre + F_VEOPER + ", " + F_TEMSUP + ", '" + F_VALUTA_tespre + "', " + F_NUMPRE_tespre + ", " + F_SMAMAX + ", " + strF_RICNET + ", " 
+            valori_tespre = valori_tespre + F_IVARIC + ", " + F_IVAMAN + ", " + F_IVAMAT + ", " + F_IVAVAR + ", " + F_CIVRIC + ", " + F_CIVMAN + ", " + F_CIVMAT + ", " + F_CIVVAR + ")"
+        #fine case C
+        #MECCANICA
+    elif tipoPratica=="M":
+        '''
+        Costo Tot. Varie
+        Piva Riparatore
+        Numero ore lavorate
+        Tariffa Manodopera
+        Costo Tot. MDO
+        SmaltRif
+        ES. Iva
+        Cod.Motore'''
+        #inizio parametrizzazione campi tabella TESPRE
+        ID_CODPRE_tespre = idPratica         
+        F_DATAPR = s.pratica.Data_Preventivo        #data excel mecc
+        if prevcurr.KM is not None:
+            F_KMVEI = 0
+        else:
+            F_KMVEI = prevcurr.KM
+        F_SUPPLE = 15           
+        F_FINITU = 10           
+        F_COMPLE = 1.6   
+        F_MATCON = prevcurr.Materiale(0, 2)              #IMPORTO MATERIALI CONSUMO
+        F_TOTMAT = prevcurr.Materiale                    #tot. materiali di consumo mecc
+        F_COSTO2 = prevcurr.Tariffa_Manodopera           #tariffa manodopera mecc
+        strF_MANMEC = (ReplaceApostrofo(arrDati(2, 29))) #
+        F_TOTME = prevcurr.Numero_ore_lavorate           #tot ore manodopera mecc
+        F_TOTRIC = prevcurr.Costo_Tot__Ricambi           #importo netto ricambi
+        F_IVARIC = 22                                    #% IVA su pezzi
+        F_IVAMAN = 22                                    #% IVA su manodopera
+        F_IVAMAT = 22                                    #% IVA su materiali
+        F_IVAVAR = 22                                    #% IVA su varie
+        F_TOTPRE = prevcurr.Totale_Imponibile            #Totale preventivo IVA escl.
+        F_TOTIVA =  prevcurr.Totale_Iva                  #Totale imposta
+        F_TOTALE =  prevcurr.F_TOTPRE                    #Totale preventivo IVA incl.
+        F_SCORIC = (arrDati(2, 21))                      #% Sconto riservato sui ricambi
+        F_SCOMAN = (arrDati(2, 28))                      #% Sconto riservato sulla manodopera
+        F_SCOVAR = (arrDati(2, 24))                      #% Sconto riservato sulle varie
+        F_CALCOL = -1
+        F_PERRIF = 0                                                        #% Smaltimento rifiuti da calcolare su manodopera VE + materiali di consumo IMPOSTATA A ZERO PERCHè INSERITA MANUALMENTE arrDati(2, 30)
+        F_IMPRIF = 0                                                        #Importo derivato da  manodopera VE + materiali di consumo per calcolo smalt.rif.
+        F_VALUTA_tespre = "Euro"           
+        F_NUMPRE_tespre = idPreventivo           #Numero Preventivo
+        F_FTSABA = -1         
+        F_FTDOME = -1         
+        F_CIVRIC = 22         
+        F_CIVMAN = 22         
+        F_CIVMAT = 22         
+        F_CIVVAR = 22         
+        F_SR_RIC = -1         
+        F_SR_DIM = -1         
+        F_SR_MAT = -1         
+        F_SR_TSR = -1         
+        F_SR_TLA = -1         
+        F_SR_TVE = -1         
+        F_SR_TME = -1         
+        F_IMPRIC = 0          
+        F_TEMPAR = 99         
+        F_ESERIC = (arrDati(2, 32))                              #ci vanno gli importi esenti iva se presenti
+        strF_RICNET = (ReplaceApostrofo(arrDati(2, 36)))         #tot imponibile
+        #fine parametrizzazione campi TESPRE
+            
+        #utilizzo una stringa di appoggio per i campi per semplificare la scrittura della query
+        campi_tespre = "(ID_CODPRE, F_DATAPR, F_KMVEI, F_SUPPLE, F_FINITU, F_COMPLE, F_MATCON, F_TOTMAT, " 
+        campi_tespre = campi_tespre + "F_COSTO2, F_MANMEC, F_TOTME, F_TOTRIC, F_IVARIC, F_IVAMAN, F_IVAMAT, F_IVAVAR, " 
+        campi_tespre = campi_tespre + "F_TOTPRE, F_TOTIVA, F_TOTALE, F_SCORIC, F_SCOMAN, F_SCOVAR, F_CALCOL, F_PERRIF, F_IMPRIF, " 
+        campi_tespre = campi_tespre + "F_VALUTA, F_NUMPRE, F_FTSABA, F_FTDOME, F_CIVRIC, F_CIVMAN, F_CIVMAT, F_CIVVAR, " 
+        campi_tespre = campi_tespre + "F_SR_RIC, F_SR_DIM, F_SR_MAT, F_SR_TSR, F_SR_TLA, F_SR_TVE, F_SR_TME, F_IMPRIC, " 
+        campi_tespre = campi_tespre + "F_TEMPAR, F_ESERIC, F_RICNET )"
+    
+        #utilizzo una stringa di appoggio per i valori da copiare per semplificare la scrittura della query
+        valori_tespre = "(" + ID_CODPRE_tespre + ", " + F_DATAPR + ", " + F_KMVEI + ",  " + F_SUPPLE + ", " + F_FINITU + ", " + F_COMPLE + ", " + F_MATCON + ", " + F_TOTMAT + ", " 
+        valori_tespre = valori_tespre + "" + F_COSTO2 + ", " + strF_MANMEC + ", " + F_TOTME + ", " + F_TOTRIC + ", " + F_IVARIC + ", " + F_IVAMAN + ", " + F_IVAMAT + ", " + F_IVAVAR + ", " 
+        valori_tespre = valori_tespre + "" + F_TOTPRE + ", " + F_TOTIVA + ", " + F_TOTALE + ", " + F_SCORIC + ", " + F_SCOMAN + ", " + F_SCOVAR + ", " + F_CALCOL + ", " + F_PERRIF + ", " + F_IMPRIF + ", " 
+        valori_tespre = valori_tespre + "'" + F_VALUTA_tespre + "', " + F_NUMPRE_tespre + ", " + F_FTSABA + ", " + F_FTDOME + ", " + F_CIVRIC + ", " + F_CIVMAN + ", " + F_CIVMAT + ", " + F_CIVVAR + ",  " 
+        valori_tespre = valori_tespre + "" + F_SR_RIC + ", " + F_SR_DIM + ", " + F_SR_MAT + ", " + F_SR_TSR + ", " + F_SR_TLA + ", " + F_SR_TVE + ", " + F_SR_TME + ", " + F_IMPRIC + ", " 
+        valori_tespre = valori_tespre + "" + F_TEMPAR + ", " + F_ESERIC + ", " + strF_RICNET + ")"
+        #fine case M
+    
+    strSQL = "insert into TESPRE " + campi_tespre + " values " + valori_tespre + ";"
+    # Esegui la query
+    tespre_cursor = conn.cursor()
+    tespre_cursor.execute(strSQL)  #creo un cursore/recordset(cursor) da una query
+    ScriviLog("Fine - insert tespre - pratica n : " + idPratica)
+    # fine insert TESPRE
+
+def ReplaceApostrofo(str):
+    return str.replace("'","")
+
 def inserisciNuovoPreventivo_RigPre(idPratica, idPreventivo, tipoPratica):
-    pass
+    ScriviLog("Avvio - insert rigpre - pratica n : " + idPratica)
+    for i in range(len(s.pratica.listaprev)):
+        if tipoPratica=='C':
+            #CARROZZERIA
+            ID_CODPRE = idPratica
+            prevcurr=s.prev
+            for pr in s.pratica.listaprev:
+                if pr.numprev==idPreventivo:
+                    prevcurr=pr
+            if len(prevcurr.listrighe)==0:
+                ScriviLog("Preventivo vuoto.")
+                ScriviLog("Fine Line3 - insert rigpre - error - pdf vuoto preventivo non compilato, n : " + idPratica)
+                #GoTo prevVuoto #se non c'è intestagione Righe vuol dire che il pdf è vuoto, allora non compilo rig-pre
+                return
+            ScriviLog("Imposta valori.")
+            F_DATRIG = prevcurr.Data_Preventivo 
+            F_ORDINE = i - 1
+            F_CITFON = arrDati(i, 12)
+            #descrizione articolo.
+            originalString = arrDati(i, 13)
+            modifiedString = prevcurr.Descrizione.replace("'", "''") # Removes all apostrophes
+            F_DESART = modifiedString(0, 50)                 # descrizione articolo ha 50 caratteri max
+            # quantità
+            if prevcurr.listrighe[i].Qta == 0 or prevcurr.listrighe[i].Qta is None or prevcurr.listrighe[i].Qta == "":
+                F_QUANTI = 1   # QUANITA' zero imposto 1
+            else:
+                F_QUANTI = prevcurr.listrighe[i].Qta
+            F_DANNSR = (arrDati(i, 14))
+            # h SR
+            if arrDati(i, 15) == None or arrDati(i, 15) == "0":
+                F_TEMPSR = 0
+            else:
+                if F_QUANTI > 1:
+                    F_TEMPSR = CDbl(arrDati(i, 15)) / F_QUANTI
+                else:
+                    F_TEMPSR = CDbl(arrDati(i, 15))
+            F_TEMPSR = ConvertToSQLDecimal(F_TEMPSR)
+            F_DANNLA = (arrDati(i, 16))
+            # h LA
+            if arrDati(i, 17) is None or arrDati(i, 17) == "0":
+                F_TEMPLA = 0
+            else:
+                if F_QUANTI > 1:
+                    F_TEMPLA = CDbl(arrDati(i, 17)) / F_QUANTI
+                else:
+                    F_TEMPLA = CDbl(arrDati(i, 17))
+            F_TEMPLA = ConvertToSQLDecimal(F_TEMPLA)
+            F_DANNVE = arrDati(i, 18)
+            # h VE
+            if arrDati(i, 19) == vbNullString or arrDati(i, 19) == "0":
+                F_TEMPVE = 0
+            else:
+                if F_QUANTI > 1:
+                    F_TEMPVE = CDbl(arrDati(i, 19)) / F_QUANTI
+                else:
+                    F_TEMPVE = CDbl(arrDati(i, 19))
+            F_TEMPVE = ConvertToSQLDecimal(F_TEMPVE)
+            # h ME
+            if arrDati(i, 20) == vbNullString or arrDati(i, 20) == "0":
+                F_TEMPME = 0
+            else:
+                if F_QUANTI > 1:
+                    F_TEMPME = CDbl(arrDati(i, 20)) / F_QUANTI
+                else:
+                    F_TEMPME = CDbl(arrDati(i, 20))
+            F_TEMPME = ConvertToSQLDecimal(F_TEMPME)
+            # prezzo
+            if arrDati(i, 21) == vbNullString: 
+                F_PREZZO = 0 
+            else: 
+                F_PREZZO = arrDati(i, 21)
+            if arrDati(i, 23) == vbNullString: 
+                F_SCONTO = 0 
+            else: 
+                F_SCONTO = arrDati(i, 23)
+            F_PREZZO = ConvertToSQLDecimal(F_PREZZO)
+            F_SCONTO = ConvertToSQLDecimal(F_SCONTO)
+            F_VALUTA = "Euro"
+            F_NUMPRE = idPreventivo
+            F_IDRIGO = i
+            F_CODGUI = Right(arrDati(2, 3), 2)
+            F_QUANTI = ConvertToSQLDecimal(F_QUANTI)
+            
+            #stringa di appoggio per campi query rigpre
+            campi_rigpre = """(ID_CODPRE, F_DATRIG, F_ORDINE, F_CITFON, F_DESART, F_QUANTI, 
+                        F_DANNSR , F_TEMPSR, F_DANNLA, F_TEMPLA, F_DANNVE, F_TEMPVE, 
+                        F_TEMPME , F_PREZZO, F_SCONTO, F_VALUTA, 
+                        F_NUMPRE , F_IDRIGO, F_CODGUI )"""
+                                
+            #stringa di appoggo per valori query rigpre
+            valori_rigpre = "('" + ID_CODPRE + "', " + F_DATRIG + ", '" + F_ORDINE + "', '" + F_CITFON + "', '" + F_DESART + "', '" + F_QUANTI + "'," 
+            valori_rigpre = valori_rigpre + "'" + F_DANNSR + "', " + F_TEMPSR + ",  '" + F_DANNLA + "', " + F_TEMPLA + ", '" + F_DANNVE + "', " + F_TEMPVE + ", " 
+            valori_rigpre = valori_rigpre + F_TEMPME + ", " + F_PREZZO + ", " + F_SCONTO + ", '" + F_VALUTA + "', " + F_NUMPRE + ", '" + F_IDRIGO + "', " 
+            valori_rigpre = valori_rigpre + "'" + F_CODGUI + "');"
+            #fine case C
+        elif tipoPratica=="M":  #MECCANICA
+            # inizio parametrizzazione variabili
+            ID_CODPRE = idPratica
+            prevcurr=s.prev
+            for pr in s.pratica.listaprev:
+                if pr.numprev==idPreventivo:
+                    prevcurr=pr
+            F_DATRIG = prevcurr.Data_Preventivo
+            F_ORDINE = i - 1
+            F_CITFON = arrDati(i, 14)   #COD ART PREVENTIVO MECCANICA
+            #descrizione articolo.
+            originalString = arrDati(i, 15)
+            modifiedString = Replace(originalString, "'", " ") 
+            F_DESART = Left(modifiedString, 50) 
+            if arrDati(i, 13) == 0 or IsNull(arrDati(i, 13)) or arrDati(i, 13) == "":
+                F_QUANTI = 1   # QUANTITA' zero imposto 1
+            else:
+                F_QUANTI = ConvertToSQLDecimal(arrDati(i, 13))   # QUANTITA'
+            F_DANNSR = "S"
+            F_DANNLA = "S"          #
+            '''nei preventivi meccanica ALD le h di MDO inserite nelle righe sono totali,
+            'mentre su WinCar vengono moltiplicate per le quantità
+            'per ovviare a questo occorre dividere le ore manodopera per le quantità, ove le quantità sono maggiori di 1'''
+            if arrDati(i, 16) == "" or arrDati(i, 16) == "0":
+                F_TEMPME = 0
+            else:
+                if F_QUANTI > 1:
+                    F_TEMPME = (arrDati(i, 16)) / F_QUANTI
+                else:
+                    F_TEMPME = (arrDati(i, 16))
+            F_TEMPME = ConvertToSQLDecimal(F_TEMPME)
+            if arrDati(i, 17) == vbNullString: 
+                F_PREZZO = 0 
+            else: 
+                F_PREZZO = ConvertToSQLDecimal(arrDati(i, 17))
+            F_FLAGPR = vbNullString
+            if arrDati(i, 18) == vbNullString: 
+                F_SCONTO = 0 
+            else: 
+                F_SCONTO = ConvertToSQLDecimal(arrDati(i, 18))
+            F_TIPRIC = "S"         #S di sostituzione per preventivo meccanica
+            if arrDati(i, 14) == vbNullString: 
+                F___TIPO = vbNullString
+            F_VALUTA = "Euro"
+            F_NUMPRE = idPreventivo
+            F_IDRIGO = i - 1
+            F_CODGUI = arrDati(2, 6)
+            F_CODIVA = 0
+            #controllare se ci sono righe esenti iva, esempio "bolletino postale per revisioni"
+            if StrComp((Left((arrDati(i, 15)), 10)), "BOLLETTINO", vbTextCompare) == 0: 
+                F_CODIVA = -1    #-1 è il codice per esente iva
+            # fine parametrizzazione varibili
+                               
+            #stringa di appoggio per campi query rigpre
+            campi_rigpre = " (ID_CODPRE, F_DATRIG, F_ORDINE, F_CITFON, F_DESART, F_QUANTI, " 
+            campi_rigpre = campi_rigpre + "F_DANNSR, F_DANNLA, F_DANNVE, F_TEMPME, F_PREZZO, F_FLAGPR, " 
+            campi_rigpre = campi_rigpre + "F_SCONTO, F_TIPRIC, F___TIPO, F_VALUTA, F_NUMPRE, F_IDRIGO, " 
+            campi_rigpre = campi_rigpre + "F_CODGUI, F_CODIVA) "
+                                
+            #stringa di appoggo per valori query rigpre
+            valori_rigpre = "(" + ID_CODPRE + ", " + F_DATRIG + ", " + F_ORDINE + ", '" + F_CITFON + "', '" + F_DESART + "', " + F_QUANTI + ", " 
+            valori_rigpre = valori_rigpre + "'" + F_DANNSR + "', '" + F_DANNLA + "', '" + F_DANNVE + "', " + F_TEMPME + ", " + F_PREZZO + ", '" + F_FLAGPR + "', " 
+            valori_rigpre = valori_rigpre + "" + F_SCONTO + ", '" + F_TIPRIC + "', '" + F___TIPO + "', '" + F_VALUTA + "', " + F_NUMPRE + ", " + F_IDRIGO + ", " 
+            valori_rigpre = valori_rigpre + "'" + F_CODGUI + "', " + F_CODIVA + ")"
+            #fine CASE M
+       
+        strSQL = "insert into RIGPRE " + campi_rigpre + " values " + valori_rigpre
+        # Esegui la query
+        tespre_cursor = conn.cursor()
+        tespre_cursor.execute(strSQL)  #creo un cursore/recordset(cursor) da una query
+        #dopo la query di inserimento - inserisco una nuova riga su rigpre
+        #controllo se il ciclo è alla fine
+    if tipoPratica == "C":
+        #INSERIMENTO RIGA SMALTIMENTO RIFIUTI
+        if arrDati(2, 51) != "":
+            strSQL = "insert into RIGPRE (ID_CODPRE, F_DESART, F_QUANTI, F_PREZZO , F_ORDINE, F_NUMPRE, F_IDRIGO, F___TIPO) " 
+            strSQL = strSQL + "values ('" + idPratica + "', 'Smaltimento rifiuti', '1', '" + arrDati(2, 51) + "', '" + (i + 1) + "', '" + idPreventivo + "', '" + (i + 1) + "', 'VC')"
+            smalt_cursor = conn.cursor()
+            smalt_cursor.execute(strSQL) 
+    elif tipoPratica=="M":
+        #INSERIMENTO RIGA MATERIALI DI CONSUMO
+        if arrDati(2, 30) is not None or arrDati(2, 30) != 0 or arrDati(2, 30) != "":
+            strSQL = "insert into RIGPRE (ID_CODPRE, F_DESART, F_QUANTI, F_PREZZO , F_ORDINE, F_NUMPRE, F_IDRIGO, F___TIPO) " 
+            strSQL = strSQL + "values ('" + idPratica + "', 'Materiali di uso e consumo', '1', '" + arrDati(2, 30) + "', '" + (i + 1) + "', '" + idPreventivo + "', '" + (i + 1) + "', 'VC')"
+            # Esegui la query
+            matcon_cursor = conn.cursor()
+            matcon_cursor.execute(strSQL) 
+        #INSERIMENTO RIGA SMALTIMENTO RIFIUTI
+        if arrDati(2, 51) != "":
+            strSQL = "insert into RIGPRE (ID_CODPRE, F_DESART, F_QUANTI, F_PREZZO , F_ORDINE, F_NUMPRE, F_IDRIGO, F___TIPO) " 
+            strSQL = strSQL + "values ('" + idPratica + "', 'Smaltimento rifiuti', '1', '" + arrDati(2, 51) + "', '" + (i + 1) + "', '" + idPreventivo + "', '" + (i + 1) + "', 'VC')"
+            smalt_cursor = conn.cursor()
+            smalt_cursor.execute(strSQL) 
+    #FINE FOR
+    ScriviLog("Fine - insert rigpre - pratica n : " + idPratica)
+    #fine query import RIPRE   
+
 def termina(Y, lFileName, feedback2, idPratica):
     pass
 ###################################################################################
@@ -425,8 +797,99 @@ def vediprev(targa):
     for row in rows:
         #print(row.ID_CODPRE, row.F_DATAPR)
         i=i+1
-        tv.insert('', 'end', values=(row.ID_CODPRE, row.F_DATAPR, row.F_RAGSOC, f"€ {int(row.F_TOTRIC):.2f}"))
+        tv.insert('', 'end', values=(row.F_NUMPRA, row.F_DATACA, row.F_RAGSOC, row.F_TARGAV, row.F_IMPPRE))
+                  #, f"€ {int(row.F_TOTRIC):.2f}"))
     return rows
+
+def corrispondenzaTarga(idPratica, idPreventivo, lFileName, tipoPratica):
+    prev0 = s.pratica.listaprev[0]
+    targa = prev0.Targa_Veicolo.replace("Targa Veicolo ","")
+    #controllo se la targa non è nulla
+    if targa != None:
+        ScriviLog("LA TARGA E': " + targa)
+        # controllo se esistono altre pratiche fatte con questa targa
+        '''
+        strSQL = "SELECT CARVEI.F_NUMPRA, CARVEI.F_DATACA, CARVEI.F_TARGAV, CARVEI.F_RAGSOC, CARVEI.F_IMPPRE, " \
+        "CARVEI.F_TPREVE FROM CARVEI WHERE (((CARVEI.F_TARGAV) like '" + targa + "') AND ((CARVEI.F_CHIUS2)<>80)) "
+        "ORDER BY CARVEI.F_NUMPRA DESC ,CARVEI.F_DATACA DESC;"
+        # Esegui la query
+        prat_cursor = conn.cursor()
+        prat_cursor.execute(strSQL)  #creo un cursore/recordset(cursor) da una query
+        # Apri il recordset
+        rows = prat_cursor.fetchall() #recupera il risultato della query in execute e lo mette in una lista 
+        '''
+        #Chiamo la funzione vediprev per riempire la tabella e avere il recordset dei preventivi/pratiche
+        rows=vediprev(targa)
+        if len(rows)==0:
+            #Controlla se il recordset ha dati
+            #se l'array è vuoto - NUOVA PRATICA
+            ScriviLog("L'array2 è vuoto!")
+            ####### nuovaPratica(idPratica2, lFileName) # SOSTITUITO CON SOTTO
+            idPratica2=nuovaPratica(idPratica, lFileName) #NB per usare una sub e restituire un valore, usare ByRef, in questo caso mi serve il nuovo numero pratica
+            idPreventivo = 1
+            idPratica = idPratica2
+            inserisciNuovoPreventivo_TesPre(arrDati, idPratica, idPreventivo, tipoPratica)
+            inserisciNuovoPreventivo_RigPre(arrDati, idPratica, idPreventivo, tipoPratica)
+            ScriviLog("Inserita nuova pratica N. " + str(idPratica))
+            feedback2 = "inserita nuova"
+        else:
+            #se non è vuoto Determina il numero di righe e colonne
+            numColonne = len(rows[0])  # NON SERVE!!!!
+            numRighe = len(rows)
+
+            if numRighe == 1:
+                controllaSingolaPratica(lFileName)
+                if selectedValue3 > 0:
+                    idPratica = arrDati2(0, 0)  # assegno il numero pratica
+                    cercaNumPre(idPratica, idPreventivo)
+                else:    #se uguale a zero
+                    if selectedValue == 0:
+                        idPratica2=nuovaPratica(idPratica2, lFileName) # NB per usare una sub e restituire un valore, usare ByRef, in questo caso mi serve il nuovo numero pratica
+                        idPreventivo = 1
+                        idPratica = idPratica2
+                        inserisciNuovoPreventivo_TesPre(arrDati, idPratica, idPreventivo, tipoPratica)
+                        inserisciNuovoPreventivo_RigPre(arrDati, idPratica, idPreventivo, tipoPratica)
+                        ScriviLog("Inserita nuova pratica N. " + str(idPratica))
+                        feedback1 = "inserita nuova"
+                    else:
+                        exit()
+            else:
+                ''' DA CAPIRE......
+                arrDati2 = Application.WorksheetFunction.Transpose(arrDati2)
+                # Popola la ListBox con l'array
+                # Configura il UserForm
+                ######################################################################################
+                Set UserForm = New UserForm1
+                UserForm.lstRecords.ColumnCount = 6         ' Imposta il numero di colonne
+                '        UserForm.lstRecords.BoundColumn = 1
+                UserForm.lstRecords.ColumnWidths = "80;100;100;200;100;80" ' Larghezza delle colonne
+                '        UserForm.lstRecords.Width = 1000
+                UserForm.lstRecords.List = arrDati2                ' Assegna l'array alla ListBox
+                UserForm.lblHeaders.Caption = "N.Pratica                Data                               Targa                       Cliente                                       Imp.Preventivo           Tipo Pratica"
+                ' Mostra il UserForm
+                UserForm.txtTarga = targa
+                UserForm.txtFilePDF = Left(lFileName, InStrRev(lFileName, ".") - 1)
+                UserForm.Show
+                ######################################################################################
+                '''
+                ScriviLog("Hai selezionato: " + selectedValue)
+                if selectedValue == 0:       #se 0 creo nuova pratica con preventivo
+                    idPreventivo = 1
+                    idPratica2=nuovaPratica(idPratica2, lFileName)
+                    idPratica = idPratica2
+                    idPratica2=nuovaPratica(idPratica2, lFileName)
+                    inserisciNuovoPreventivo_TesPre(arrDati, idPratica, idPreventivo, tipoPratica)
+                    inserisciNuovoPreventivo_RigPre(arrDati, idPratica, idPreventivo, tipoPratica)
+                    ScriviLog("Inserita nuova pratica N. " + str(idPratica))
+                    feedback2 = "inserita nuova"
+                else:                            #se scelgo una pratica, controllo i numeri preventivi
+                    if selectedValue > 0:
+                        idPratica = selectedValue
+                        cercaNumPre(idPratica, idPreventivo)
+                    else:
+                        exit()
+    else:
+        nuovaPratica(idPratica2, lFileName)
 
 def nuovaPratica(idpratica, filename):
     dataAttuale = datetime.datetime.now() # Ottieni la data corrente
@@ -572,97 +1035,6 @@ def nuovaPratica(idpratica, filename):
     #fine insert pratica2
     return idPratica 
     
-def corrispondenzaTarga(idPratica, idPreventivo, lFileName, tipoPratica):
-    prev0 = s.pratica.listaprev[0]
-    targa = prev0.Targa_Veicolo.replace("Targa Veicolo ","")
-    #controllo se la targa non è nulla
-    if targa != None:
-        ScriviLog("LA TARGA E': " + targa)
-        # controllo se esistono altre pratiche fatte con questa targa
-        '''
-        strSQL = "SELECT CARVEI.F_NUMPRA, CARVEI.F_DATACA, CARVEI.F_TARGAV, CARVEI.F_RAGSOC, CARVEI.F_IMPPRE, " \
-        "CARVEI.F_TPREVE FROM CARVEI WHERE (((CARVEI.F_TARGAV) like '" + targa + "') AND ((CARVEI.F_CHIUS2)<>80)) "
-        "ORDER BY CARVEI.F_NUMPRA DESC ,CARVEI.F_DATACA DESC;"
-        # Esegui la query
-        prat_cursor = conn.cursor()
-        prat_cursor.execute(strSQL)  #creo un cursore/recordset(cursor) da una query
-        # Apri il recordset
-        rows = prat_cursor.fetchall() #recupera il risultato della query in execute e lo mette in una lista 
-        '''
-        #Chiamo la funzione vediprev per riempire la tabella e avere il recordset dei preventivi/pratiche
-        rows=vediprev(targa)
-        if len(rows)==0:
-            #Controlla se il recordset ha dati
-            #se l'array è vuoto - NUOVA PRATICA
-            ScriviLog("L'array2 è vuoto!")
-            ####### nuovaPratica(idPratica2, lFileName) # SOSTITUITO CON SOTTO
-            idPratica2=nuovaPratica(idPratica, lFileName) #NB per usare una sub e restituire un valore, usare ByRef, in questo caso mi serve il nuovo numero pratica
-            idPreventivo = 1
-            idPratica = idPratica2
-            inserisciNuovoPreventivo_TesPre(arrDati, idPratica, idPreventivo, tipoPratica)
-            inserisciNuovoPreventivo_RigPre(arrDati, idPratica, idPreventivo, tipoPratica)
-            ScriviLog("Inserita nuova pratica N. " + str(idPratica))
-            feedback2 = "inserita nuova"
-        else:
-            #se non è vuoto Determina il numero di righe e colonne
-            numColonne = len(rows[0])  # NON SERVE!!!!
-            numRighe = len(rows)
-
-            if numRighe == 1:
-                controllaSingolaPratica(lFileName)
-                if selectedValue3 > 0:
-                    idPratica = arrDati2(0, 0)  # assegno il numero pratica
-                    cercaNumPre(idPratica, idPreventivo)
-                else:    #se uguale a zero
-                    if selectedValue == 0:
-                        idPratica2=nuovaPratica(idPratica2, lFileName) # NB per usare una sub e restituire un valore, usare ByRef, in questo caso mi serve il nuovo numero pratica
-                        idPreventivo = 1
-                        idPratica = idPratica2
-                        inserisciNuovoPreventivo_TesPre(arrDati, idPratica, idPreventivo, tipoPratica)
-                        inserisciNuovoPreventivo_RigPre(arrDati, idPratica, idPreventivo, tipoPratica)
-                        ScriviLog("Inserita nuova pratica N. " + str(idPratica))
-                        feedback1 = "inserita nuova"
-                    else:
-                        exit()
-            else:
-                ''' DA CAPIRE......
-                arrDati2 = Application.WorksheetFunction.Transpose(arrDati2)
-                # Popola la ListBox con l'array
-                # Configura il UserForm
-                ######################################################################################
-                Set UserForm = New UserForm1
-                UserForm.lstRecords.ColumnCount = 6         ' Imposta il numero di colonne
-                '        UserForm.lstRecords.BoundColumn = 1
-                UserForm.lstRecords.ColumnWidths = "80;100;100;200;100;80" ' Larghezza delle colonne
-                '        UserForm.lstRecords.Width = 1000
-                UserForm.lstRecords.List = arrDati2                ' Assegna l'array alla ListBox
-                UserForm.lblHeaders.Caption = "N.Pratica                Data                               Targa                       Cliente                                       Imp.Preventivo           Tipo Pratica"
-                ' Mostra il UserForm
-                UserForm.txtTarga = targa
-                UserForm.txtFilePDF = Left(lFileName, InStrRev(lFileName, ".") - 1)
-                UserForm.Show
-                ######################################################################################
-                '''
-                ScriviLog("Hai selezionato: " + selectedValue)
-                if selectedValue == 0:       #se 0 creo nuova pratica con preventivo
-                    idPreventivo = 1
-                    idPratica2=nuovaPratica(idPratica2, lFileName)
-                    idPratica = idPratica2
-                    idPratica2=nuovaPratica(idPratica2, lFileName)
-                    inserisciNuovoPreventivo_TesPre(arrDati, idPratica, idPreventivo, tipoPratica)
-                    inserisciNuovoPreventivo_RigPre(arrDati, idPratica, idPreventivo, tipoPratica)
-                    ScriviLog("Inserita nuova pratica N. " + str(idPratica))
-                    feedback2 = "inserita nuova"
-                else:                            #se scelgo una pratica, controllo i numeri preventivi
-                    if selectedValue > 0:
-                        idPratica = selectedValue
-                        cercaNumPre(idPratica, idPreventivo)
-                    else:
-                        exit()
-    else:
-        nuovaPratica(idPratica2, lFileName)
-
-
 def cerca():
     #for i in Lb1.curselection():
     #    print(Lb1.get(i))

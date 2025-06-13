@@ -16,6 +16,7 @@ class pratica:
     F_PARIVA = ""
     F_TELEFO = ""
     NumPratica = 0
+    Targa = 0
     def __init__(self):
         pass
     def addprev(self, prev):
@@ -23,6 +24,7 @@ class pratica:
 class prev:
     listrighe=[]
     #Targa_Veicolo=""
+    numprev=0
     def __init__(self):
         listrighe=[]
     def addriga(self, riga):
